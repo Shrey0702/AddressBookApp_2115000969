@@ -7,6 +7,7 @@ namespace AddressBookApp.Controllers;
 public class AddressBookController : ControllerBase
 {
     // using await operation because while handling database operations there should be no blocking of threads so it is the suggested way to do it properly
+    // i created dummy object because right now i haven't created any model or DTO class in my project
     public AddressBookController()
     {
     }
@@ -18,7 +19,7 @@ public class AddressBookController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<IEnumerable<object>>> GetAllContacts()
     {
-        return Ok(); 
+        return Ok("hrioeil"); 
     }
 
     /// <summary>
