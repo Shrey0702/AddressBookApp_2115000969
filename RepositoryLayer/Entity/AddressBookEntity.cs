@@ -11,23 +11,25 @@ namespace RepositoryLayer.Entity
     public class AddressBookEntity
     {
         [Key]
-        public int AddressID { get; set; }
-        [Required]
-        public string PersonName { get; set; } = string.Empty;
+        public int Id { get; set; }
 
-        [Required]
-        public string PhoneNumber { get; set; } = string.Empty;
-        [Required]
-        public string City { get; set; } = string.Empty;
-        [Required]
-        public int Zip { get; set; }
+        //[Required]
+        public string Name { get; set; }
 
-        [Required]
-        public string Address { get; set; } = string.Empty;
+        //[Required]
+        //[EmailAddress]
+        public string Email { get; set; }
 
-        [Required]
-        public int UserId { get; set; }
-        [ForeignKey("UserId")]
-        public virtual UserEntity User { get; set; } = null!;
+        //[Required]
+        //[MaxLength(20)]
+        public string PhoneNumber { get; set; }
+
+        //[Required]
+        //[MaxLength(200)]
+        public string Address { get; set; }
+
+        //[Required]
+        [ForeignKey("Users")] //  UserId as Foreign Key but does NOT create navigation behavior
+        public int UserId { get; set; } // Still a Foreign Key in DB but no automatic joins
     }
 }

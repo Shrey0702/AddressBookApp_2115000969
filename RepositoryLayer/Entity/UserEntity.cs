@@ -11,15 +11,15 @@ namespace RepositoryLayer.Entity
     {
         [Key]
         public int UserId { get; set; }
-        [Required]
-        public string FirstName { get; set; } = string.Empty;
-        [Required]
-        public string LastName { get; set; } = string.Empty;
-        [Required, EmailAddress]
-        public string Email { get; set; } = string.Empty;
-        [Required]
-        public string PasswordHash { get; set; } = string.Empty;
 
-        public ICollection<AddressBookEntity> AddressBooks { get; set; } = new List<AddressBookEntity>();
+        public string FirstName { get; set; }
+
+        public string LastName { get; set; }
+
+        public string Email { get; set; }
+
+        public string Password { get; set; }
+
+        public string Role { get; set; } = "User";
     }
 }

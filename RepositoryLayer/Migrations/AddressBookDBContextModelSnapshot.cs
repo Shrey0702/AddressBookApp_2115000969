@@ -9,8 +9,8 @@ using RepositoryLayer.Context;
 
 namespace RepositoryLayer.Migrations
 {
-    [DbContext(typeof(AddressAppContext))]
-    partial class AddressAppContextModelSnapshot : ModelSnapshot
+    [DbContext(typeof(AddressBookDBContext))]
+    partial class AddressBookDBContextModelSnapshot : ModelSnapshot
     {
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
@@ -23,21 +23,21 @@ namespace RepositoryLayer.Migrations
 
             modelBuilder.Entity("RepositoryLayer.Entity.AddressBookEntity", b =>
                 {
-                    b.Property<int>("AddressID")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("AddressID"), 1L, 1);
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
                     b.Property<string>("Address")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("City")
+                    b.Property<string>("Email")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("PersonName")
+                    b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -48,14 +48,9 @@ namespace RepositoryLayer.Migrations
                     b.Property<int>("UserId")
                         .HasColumnType("int");
 
-                    b.Property<int>("Zip")
-                        .HasColumnType("int");
+                    b.HasKey("Id");
 
-                    b.HasKey("AddressID");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("Addresses");
+                    b.ToTable("AddressBook");
                 });
 
             modelBuilder.Entity("RepositoryLayer.Entity.UserEntity", b =>
@@ -78,29 +73,17 @@ namespace RepositoryLayer.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("PasswordHash")
+                    b.Property<string>("Password")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Role")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("UserId");
 
                     b.ToTable("Users");
-                });
-
-            modelBuilder.Entity("RepositoryLayer.Entity.AddressBookEntity", b =>
-                {
-                    b.HasOne("RepositoryLayer.Entity.UserEntity", "User")
-                        .WithMany("AddressBooks")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("RepositoryLayer.Entity.UserEntity", b =>
-                {
-                    b.Navigation("AddressBooks");
                 });
 #pragma warning restore 612, 618
         }

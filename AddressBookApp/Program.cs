@@ -1,15 +1,22 @@
 using Microsoft.EntityFrameworkCore;
 using RepositoryLayer.Context;
+using FluentValidation.AspNetCore;
+using ModelLayer.DTO;
+using ModelLayer.Validator;
+using FluentValidation;
 
 var builder = WebApplication.CreateBuilder(args);
-
-var connectionString = builder.Configuration.GetConnectionString("SqlConnection");
-builder.Services.AddDbContext<AddressAppContext>(options =>
-    options.UseSqlServer(connectionString));
 
 // Add services to the container.
 
 builder.Services.AddControllers();
+
+builder.Services.AddValidatorsFromAssemblyContaining<AddressBookValidator>();
+
+var connectionString = builder.Configuration.GetConnectionString("SqlConnection");
+builder.Services.AddDbContext<
+    AddressBookDBContext>(options =>
+    options.UseSqlServer(connectionString));
 
 var app = builder.Build();
 
