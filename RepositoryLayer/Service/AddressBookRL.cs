@@ -10,6 +10,9 @@ namespace RepositoryLayer.Service
 {
     public class AddressBookRL : IAddressBookRL
     {
+        /// <summary>
+        /// Creating object of AddressBookDBContext
+        /// </summary>
         private readonly AddressBookDBContext _dbContext;
         public AddressBookRL(AddressBookDBContext dbContext)
         {

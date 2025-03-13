@@ -14,22 +14,22 @@ namespace RepositoryLayer.Entity
         public int Id { get; set; }
 
         //[Required]
-        public string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
 
         //[Required]
         //[EmailAddress]
-        public string Email { get; set; }
+        public string Email { get; set; } = string.Empty;
 
         //[Required]
         //[MaxLength(20)]
-        public string PhoneNumber { get; set; }
+        public string PhoneNumber { get; set; } = string.Empty;
 
         //[Required]
         //[MaxLength(200)]
-        public string Address { get; set; }
+        public string Address { get; set; } = string.Empty;
 
         //[Required]
-        [ForeignKey("Users")] //  UserId as Foreign Key but does NOT create navigation behavior
-        public int UserId { get; set; } // Still a Foreign Key in DB but no automatic joins
+        [ForeignKey("Users")]
+        public int UserId { get; set; }// Foreign Key
     }
 }
