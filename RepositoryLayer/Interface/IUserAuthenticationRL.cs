@@ -1,4 +1,5 @@
-﻿using RepositoryLayer.Entity;
+﻿using ModelLayer.DTO;
+using RepositoryLayer.Entity;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,5 +17,7 @@ namespace RepositoryLayer.Interface
         //(bool found, string hashPass) GetUserCredentialsRL(string email);
 
         (bool login, string token) LoginUserRL(string email, string password);
+        (bool Found, string token) CheckUserEmail(string email);
+        (bool status, string message) ResetPasswordRL(ResetPasswordDTO resetCredentials);
     }
 }

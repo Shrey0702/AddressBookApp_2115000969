@@ -77,5 +77,44 @@ namespace BusinessLayer.Service
             response1.Data = "No Token Generated";
             return response1;
         }
+
+        public Response<string> ForgotPasswordBL(string email)
+        {
+            (bool Found, string token) = _userAuthRL.CheckUserEmail(email);
+            if(Found)
+            {
+                Response<string> response = new Response<string>();
+                response.Success = true;
+                response.Message = "User Found use the returned token to reset your password";
+                response.Data = token;
+                return response;
+            }
+            Response<string> response1 = new Response<string>();
+            response1.Success = false;
+            response1.Message = "User Not Found";
+            response1.Data = "No Token";
+            return response1;
+        }
+
+        public Response<string> ResetPasswordBL(ResetPasswordDTO resetCredentials)
+        {
+            (bool status, string message) = _userAuthRL.ResetPasswordRL(resetCredentials);
+            if (status)
+            {
+                Response<string> response = new Response<string>();
+                response.Success = true;
+                response.Message = message;
+                response.Data = "Password Reset Successfully";
+                return response;
+            }
+            else
+            {
+                Response<string> response = new Response<string>();
+                response.Success = false;
+                response.Message = message;
+                response.Data = "Password Reset Failed";
+                return response;
+            }
+        }
     }
 }

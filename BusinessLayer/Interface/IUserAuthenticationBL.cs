@@ -13,5 +13,8 @@ namespace BusinessLayer.Interface
         Response<RegisterResponseDTO> RegisterUserBL(UserRegistrationDTO newUser);
 
         Response<string> LoginUserBL(LoginDTO loginCrediantials);
+
+        Response<string> ForgotPasswordBL(string email);
+        Response<string> ResetPasswordBL(ResetPasswordDTO resetCredentials);
     }
 }

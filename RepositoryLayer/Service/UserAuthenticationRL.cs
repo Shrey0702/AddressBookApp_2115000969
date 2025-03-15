@@ -9,6 +9,8 @@ using RepositoryLayer.Interface;
 using Microsoft.EntityFrameworkCore;
 using Middleware.TokenGeneration;
 using Middleware.PasswordHashing;
+using ModelLayer.DTO;
+using Middleware.SMTP;
 
 
 namespace RepositoryLayer.Service
@@ -17,10 +19,12 @@ namespace RepositoryLayer.Service
     {
         private readonly AddressBookDBContext _dbContext;
         private readonly Jwt _jwt;
-        public UserAuthenticationRL(AddressBookDBContext dbContext, Jwt jwt)
+        private readonly IEmailServices _emailService;
+        public UserAuthenticationRL(AddressBookDBContext dbContext, Jwt jwt, IEmailServices emailServices)
         {
             _dbContext = dbContext;
             _jwt = jwt;
+            _emailService = emailServices;
         }
         public bool Checkuser(string Email)
         {
@@ -54,6 +58,35 @@ namespace RepositoryLayer.Service
                 }
             }
             return (false, string.Empty);
+        }
+
+        public (bool Found, string token) CheckUserEmail(string email)
+        {
+            UserEntity user = _dbContext.Users.FirstOrDefault(e => e.Email == email);
+            if (user != null)
+            {
+                string token = _jwt.GenerateResetPasswordToken(user.Email);
+                _emailService.SendResetPasswordEmailAsync(email, token);
+                return (true, token);
+            }
+            return (false, "no token generation");
+        }
+
+        public (bool status, string message) ResetPasswordRL(ResetPasswordDTO resetCredentials)
+        {
+            if(!_jwt.ValidateToken(resetCredentials.Token, out int userId, out string Email))
+            {
+                return (false, "token validation failed canot reset password");
+                
+            }
+            var user = _dbContext.Users.FirstOrDefault(e => e.Email == Email);
+            if(user == null)
+            {
+                return (false, "no user with that email found!!");
+            }
+            user.Password = PasswordHasher.HashPassword(resetCredentials.NewPassword);
+            _dbContext.SaveChanges();
+            return (true, "password is successfully changed for the given id");
         }
     }
 }
