@@ -9,11 +9,19 @@ using BusinessLayer.Interface;
 using BusinessLayer.Service;
 using RepositoryLayer.Interface;
 using RepositoryLayer.Service;
+using Microsoft.AspNetCore.Identity;
+using Middleware.TokenGeneration;
+using Middleware.PasswordHashing;
+using Microsoft.AspNetCore.Http;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddScoped<IAddressBookBL, AddressBookBL>();
 builder.Services.AddScoped<IAddressBookRL, AddressBookRL>();
+builder.Services.AddScoped<IUserAuthenticationBL, UserAuthenticationBL>();
+builder.Services.AddScoped<IUserAuthenticationRL, UserAuthenticationRL>();
+builder.Services.AddSingleton<Jwt>();
+builder.Services.AddScoped<PasswordHasher>();
 
 // Add services to the container
 builder.Services.AddControllers();
@@ -21,6 +29,10 @@ builder.Services.AddControllers();
 //Add swagger 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+// Register FluentValidation
+builder.Services.AddValidatorsFromAssemblyContaining<AddressBookValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<UserValidator>();
 
 // registered FluentValidation
 builder.Services.AddValidatorsFromAssemblyContaining<AddressBookValidator>();
