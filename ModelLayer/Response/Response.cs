@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace ModelLayer.Response
 {
-    public class Responce<T>
+    public class Response<T>
     {
         public bool Success { get; set; } = false;
 

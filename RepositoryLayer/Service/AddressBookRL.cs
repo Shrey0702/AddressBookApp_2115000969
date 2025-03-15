@@ -1,4 +1,6 @@
-﻿using RepositoryLayer.Context;
+﻿using Microsoft.EntityFrameworkCore;
+using RepositoryLayer.Context;
+using RepositoryLayer.Entity;
 using RepositoryLayer.Interface;
 using System;
 using System.Collections.Generic;
@@ -17,6 +19,57 @@ namespace RepositoryLayer.Service
         public AddressBookRL(AddressBookDBContext dbContext)
         {
             _dbContext = dbContext;
+        }
+
+
+        public List<AddressBookEntity> GetAllContactsRL()
+        {
+            var Entities = _dbContext.AddressBook.AsNoTracking().ToList();
+            return Entities;
+        }
+
+
+        public AddressBookEntity GetContactByIDRL(int id)
+        {
+            var addressBookEntity = _dbContext.AddressBook.FirstOrDefault(a => a.Id == id);
+
+            return addressBookEntity;
+        }
+
+
+        public AddressBookEntity AddContactRL(AddressBookEntity addressBookEntity)
+        {
+            _dbContext.AddressBook.Add(addressBookEntity);
+            _dbContext.SaveChanges();
+            return addressBookEntity;
+
+        }
+
+        public AddressBookEntity UpdateContactByID(int id, AddressBookEntity addressBookEntity)
+        {
+            var entity = _dbContext.AddressBook.FirstOrDefault(a => a.Id == id);
+            if (entity == null)
+            {
+                return entity;
+            }
+            entity.Address = addressBookEntity.Address;
+            entity.PhoneNumber = addressBookEntity.PhoneNumber;
+            entity.Email = addressBookEntity.Email;
+            entity.Name = addressBookEntity.Name;
+            _dbContext.SaveChanges();
+            return entity;
+        }
+
+        public AddressBookEntity DeleteContactByID(int id)
+        {
+            var entity = _dbContext.AddressBook.FirstOrDefault(_a => _a.Id == id);
+            if (entity == null)
+            {
+                return null;
+            }
+            _dbContext.AddressBook.Remove(entity);
+            _dbContext.SaveChanges();
+            return entity;
         }
     }
 }
