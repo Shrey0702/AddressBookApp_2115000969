@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using StackExchange.Redis;
-
+// i created this controller only to chek if my redis is working correctly or not
 namespace AddressBookApp.Controllers
 {
     [Route("api/health")]

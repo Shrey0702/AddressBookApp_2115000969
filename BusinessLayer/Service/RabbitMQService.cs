@@ -16,7 +16,8 @@ namespace BusinessLayer.Service
         private readonly string _exchange;
         private readonly string _queue;
         private readonly string _routingKey;
-
+        // if we want we can also create a separate class for the message model
+        // and we can also create an interface for this class
         public RabbitMQService(IConfiguration configuration)
         {
             var rabbitConfig = configuration.GetSection("RabbitMQ");

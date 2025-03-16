@@ -54,7 +54,9 @@ namespace RepositoryLayer.Service
             var entity = _dbContext.AddressBook.FirstOrDefault(a => a.Id == id);
             if (entity == null)
             {
-                return null; // it is working fine with authorisation/authentication it's just in response it is sending updated value but in reality if not authorised it is not letting other person to update database
+                return null; // it is working fine with authorisation/authentication
+                             // it's just in response it is sending updated value but in reality
+                             // if not authorised it is not letting other person to update database so database is safe
             }
             // later need to modify the response only other things are fixed
             if (entity.UserId == UserId)

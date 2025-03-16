@@ -24,8 +24,8 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
     ConnectionMultiplexer.Connect(builder.Configuration["Redis:ConnectionString"]));
 
-builder.Services.AddScoped<IRedisCacheService, RedisCacheService>(); // Correctly registering interface
-builder.Services.AddScoped<RedisCacheService>(); // Ensuring RedisCacheService is available
+builder.Services.AddScoped<IRedisCacheService, RedisCacheService>(); 
+builder.Services.AddScoped<RedisCacheService>(); 
 
 builder.Services.AddScoped<IAddressBookBL, AddressBookBL>();
 builder.Services.AddScoped<IAddressBookRL, AddressBookRL>();
@@ -73,15 +73,15 @@ var connectionString = builder.Configuration.GetConnectionString("SqlConnection"
 builder.Services.AddDbContext<AddressBookDBContext>(options =>
     options.UseSqlServer(connectionString));
 
-//Add Controllers & Swagger
+// adding Controllers & Swagger
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddAuthorization(); // <-- Ensure it's before `builder.Build();`
+builder.Services.AddAuthorization(); 
 
 var app = builder.Build();
 
-//Middlewar
+// middleware
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();

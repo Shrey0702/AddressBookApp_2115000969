@@ -32,8 +32,8 @@ namespace Middleware.TokenGeneration
         };
 
             var token = new JwtSecurityToken(
-                issuer: _config["Jwt:Issuer"],  // ✅ Add Issuer
-                audience: _config["Jwt:Audience"],  // ✅ Add Audience
+                issuer: _config["Jwt:Issuer"],  
+                audience: _config["Jwt:Audience"], 
                 claims: claims,
                 expires: DateTime.UtcNow.AddMinutes(Convert.ToDouble(_config["Jwt:ExpirationMinutes"])),
                 signingCredentials: credentials

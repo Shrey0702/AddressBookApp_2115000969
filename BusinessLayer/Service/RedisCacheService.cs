@@ -9,10 +9,13 @@ using Newtonsoft.Json;
 
 namespace BusinessLayer.Service
 {
+    /// <summary>
+    /// Redis Cache Service
+    /// </summary>
     public class RedisCacheService: IRedisCacheService
     {
+        // Redis cache
         private readonly IDistributedCache _cache;
-
         public RedisCacheService(IDistributedCache cache)
         {
             _cache = cache;

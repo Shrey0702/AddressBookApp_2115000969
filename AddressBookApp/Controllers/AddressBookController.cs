@@ -96,13 +96,11 @@ namespace AddressBookApp.Controllers
 
             Console.WriteLine($"Extracted UserId: {userId}");
 
-            // Validate request body
             if (addContact == null)
             {
                 return BadRequest(new { message = "Invalid request data." });
             }
 
-            // Call Business Logic Layer to Add Contact
             CreateContactDTO createdContact = await _addressBookBL.AddContactBL(addContact, userId);
 
             if (createdContact == null)
@@ -110,20 +108,18 @@ namespace AddressBookApp.Controllers
                 return StatusCode(500, new { message = "Failed to add contact." });
             }
 
-            // Publish RabbitMQ message *after* DB operation is successful
+            // publishing RabbitMQ message after DB operation is successful
             try
             {
                 var message = JsonSerializer.Serialize(createdContact);
                 _rabbitMQService.PublishMessage(message);
-                Console.WriteLine($"📢 Published Message: {message}");
+                Console.WriteLine($" Published Message: {message}");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"⚠️ RabbitMQ Publish Failed: {ex.Message}");
-                // Optionally log to a file or monitoring tool
+                Console.WriteLine($" RabbitMQ Publish Failed: {ex.Message}");
             }
 
-            // Create Response Object
             var addResponse = new Response<CreateContactDTO>
             {
                 Success = true,

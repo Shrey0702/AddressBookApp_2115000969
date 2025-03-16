@@ -11,6 +11,7 @@ namespace BusinessLayer.Service
 {
     public class RabbitMQConsumerService: BackgroundService
     {
+        // RabbitMQ connection string
         private readonly string _hostname = "localhost";
         private readonly string _queue = "AddressBookQueue";
 
