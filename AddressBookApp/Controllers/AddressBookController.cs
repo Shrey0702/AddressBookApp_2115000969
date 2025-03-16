@@ -1,4 +1,5 @@
-using BusinessLayer.Interface;
+﻿using BusinessLayer.Interface;
+using BusinessLayer.Service;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ModelLayer;
@@ -6,6 +7,7 @@ using ModelLayer.DTO;
 using ModelLayer.Response;
 using RepositoryLayer.Entity;
 using System.Security.Claims;
+using System.Text.Json;
 
 namespace AddressBookApp.Controllers
 {
@@ -14,9 +16,11 @@ namespace AddressBookApp.Controllers
     public class AddressBookController : ControllerBase
     {
         private readonly IAddressBookBL _addressBookBL;
-        public AddressBookController(IAddressBookBL addressBookBL)
+        private readonly RabbitMQService _rabbitMQService;
+        public AddressBookController(IAddressBookBL addressBookBL, RabbitMQService rabbitMQService)
         {
             _addressBookBL = addressBookBL;
+            _rabbitMQService = rabbitMQService;
         }
         /// <summary>
         /// Fetch all contacts.
@@ -76,7 +80,6 @@ namespace AddressBookApp.Controllers
         /// </summary>
         [Authorize]
         [HttpPost]
-        // Method to add contact to the database
         public async Task<ActionResult> AddContact([FromBody] AddressBookDTO addContact)
         {
             // Ensure User is Authenticated and Extract UserId Safely
@@ -93,7 +96,6 @@ namespace AddressBookApp.Controllers
 
             Console.WriteLine($"Extracted UserId: {userId}");
 
-
             // Validate request body
             if (addContact == null)
             {
@@ -102,6 +104,24 @@ namespace AddressBookApp.Controllers
 
             // Call Business Logic Layer to Add Contact
             CreateContactDTO createdContact = await _addressBookBL.AddContactBL(addContact, userId);
+
+            if (createdContact == null)
+            {
+                return StatusCode(500, new { message = "Failed to add contact." });
+            }
+
+            // Publish RabbitMQ message *after* DB operation is successful
+            try
+            {
+                var message = JsonSerializer.Serialize(createdContact);
+                _rabbitMQService.PublishMessage(message);
+                Console.WriteLine($"📢 Published Message: {message}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"⚠️ RabbitMQ Publish Failed: {ex.Message}");
+                // Optionally log to a file or monitoring tool
+            }
 
             // Create Response Object
             var addResponse = new Response<CreateContactDTO>
