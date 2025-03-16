@@ -5,87 +5,128 @@ using RepositoryLayer.Entity;
 using RepositoryLayer.Interface;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace BusinessLayer.Service
 {
     public class AddressBookBL : IAddressBookBL
     {
-
         private readonly IMapper _mapper;
         private readonly IAddressBookRL _addressBookRL;
+        private readonly RedisCacheService _cacheService;
 
         /// <summary>
-        /// using depencency injection
+        /// Using dependency injection
         /// </summary>
-        /// <param name="mapper"></param>
-        /// <param name="addressBookRL"></param>
-        public AddressBookBL(IMapper mapper, IAddressBookRL addressBookRL)
+        public AddressBookBL(IMapper mapper, IAddressBookRL addressBookRL, RedisCacheService cacheService)
         {
             _mapper = mapper;
             _addressBookRL = addressBookRL;
+            _cacheService = cacheService;
         }
 
         /// <summary>
-        /// retrieving all contacts
+        /// Retrieving all contacts with caching
         /// </summary>
-        /// <returns></returns>
-        public List<AddressBookEntity> GetAllContactsBL()
+        public async Task<List<AddressBookEntity>> GetAllContactsBL(int UserId)
         {
-            return _addressBookRL.GetAllContactsRL();
+            string cacheKey = "AddressBook_AllContacts";
+
+            // Check cache first
+            var cachedData = await _cacheService.GetCacheAsync<List<AddressBookEntity>>(cacheKey);
+            if (cachedData != null)
+            {
+                Console.WriteLine("Cache Hit - Returning data from Redis");
+                return cachedData;
+            }
+
+            // Fetch from DB if not in cache
+            var contacts = _addressBookRL.GetAllContactsRL(UserId);
+
+            // Store in cache for 5 minutes
+            await _cacheService.SetCacheAsync(cacheKey, contacts, TimeSpan.FromMinutes(5));
+
+            Console.WriteLine("Cache Miss - Fetched from DB and stored in Redis");
+            return contacts;
         }
 
         /// <summary>
-        /// getting a particular contact by ID
+        /// Getting a particular contact by ID with caching
         /// </summary>
-        /// <param name="id"></param>
-        /// <returns></returns>
-        public AddressBookDTO GetContactByIDBL(int id)
+        public async Task<AddressBookDTO> GetContactByIDBL(int id, int UserId)
         {
-            AddressBookEntity addressBookEntity = _addressBookRL.GetContactByIDRL(id);
+            string cacheKey = $"AddressBook_Contact_{id}";
 
-            return _mapper.Map<AddressBookDTO>(addressBookEntity);
+            var cachedContact = await _cacheService.GetCacheAsync<AddressBookEntity>(cacheKey);
+            if (cachedContact != null)
+            {
+                Console.WriteLine($"Cache Hit - Contact {id} returned from Redis");
+                return _mapper.Map<AddressBookDTO>(cachedContact);
+            }
+
+            var contact = _addressBookRL.GetContactByIDRL(id, UserId);
+            if (contact != null)
+            {
+                await _cacheService.SetCacheAsync(cacheKey, contact, TimeSpan.FromMinutes(10));
+                Console.WriteLine($"Cache Miss - Contact {id} fetched from DB and stored in Redis");
+            }
+
+            return _mapper.Map<AddressBookDTO>(contact);
         }
 
         /// <summary>
-        /// creating new contact
+        /// Creating a new contact and clearing cache
         /// </summary>
-        /// <param name="createContact"></param>
-        /// <returns></returns>
-        public CreateContactDTO AddContactBL(AddressBookDTO createContact)
+        public async Task<CreateContactDTO> AddContactBL(AddressBookDTO createContact, int userId)
         {
+            // Map DTO to Entity
             AddressBookEntity addressBookEntity = _mapper.Map<AddressBookEntity>(createContact);
+            addressBookEntity.UserId = userId;  // Ensure the UserId is set
 
-            AddressBookEntity createdEntity = _addressBookRL.AddContactRL(addressBookEntity);
+            // Save contact using the Repository Layer
+            AddressBookEntity createdEntity = await _addressBookRL.AddContactRL(addressBookEntity);
 
+            // Clear cached list after adding a new contact
+            try
+            {
+                await _cacheService.RemoveCacheAsync("AddressBook_AllContacts");
+            }
+            catch (Exception ex)
+            {
+                // Log error but don't break request
+                Console.WriteLine($"Cache removal failed: {ex.Message}");
+            }
+
+            // Map the result back to DTO and return
             return _mapper.Map<CreateContactDTO>(createdEntity);
         }
 
+
         /// <summary>
-        /// updating a particular contact
+        /// Updating a particular contact and clearing cache
         /// </summary>
-        /// <param name="id"></param>
-        /// <param name="updateContact"></param>
-        /// <returns></returns>
-        public AddressBookDTO UpdateContactByIDBL(int id, AddressBookDTO updateContact)
+        public async Task<AddressBookDTO> UpdateContactByIDBL(int id, AddressBookDTO updateContact, int UserId)
         {
             AddressBookEntity addressBookEntity = _mapper.Map<AddressBookEntity>(updateContact);
+            AddressBookEntity updatedEntity = _addressBookRL.UpdateContactByID(id, addressBookEntity, UserId);
 
-            AddressBookEntity UpdatedEntity = _addressBookRL.UpdateContactByID(id, addressBookEntity);
+            // Clear cache for both the specific contact and full list
+            await _cacheService.RemoveCacheAsync("AddressBook_AllContacts");
+            await _cacheService.RemoveCacheAsync($"AddressBook_Contact_{id}");
 
-            return _mapper.Map<AddressBookDTO>(UpdatedEntity);
+            return _mapper.Map<AddressBookDTO>(updatedEntity);
         }
 
         /// <summary>
-        /// deleting contact by id
+        /// Deleting a contact and clearing cache
         /// </summary>
-        /// <param name="id"></param>
-        /// <returns></returns>
-        public AddressBookDTO DeleteContactByIDBL(int id)
+        public async Task<AddressBookDTO> DeleteContactByIDBL(int id, int UserId)
         {
-            AddressBookEntity deletedEntity = _addressBookRL.DeleteContactByID(id);
+            AddressBookEntity deletedEntity = _addressBookRL.DeleteContactByID(id, UserId);
+
+            // Clear cache for both the specific contact and full list
+            await _cacheService.RemoveCacheAsync("AddressBook_AllContacts");
+            await _cacheService.RemoveCacheAsync($"AddressBook_Contact_{id}");
 
             return _mapper.Map<AddressBookDTO>(deletedEntity);
         }

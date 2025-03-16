@@ -22,54 +22,68 @@ namespace RepositoryLayer.Service
         }
 
 
-        public List<AddressBookEntity> GetAllContactsRL()
+        public List<AddressBookEntity> GetAllContactsRL(int UserId)
         {
-            var Entities = _dbContext.AddressBook.AsNoTracking().ToList();
-            return Entities;
+            return _dbContext.AddressBook
+        .AsNoTracking()
+        .Where(contact => contact.UserId == UserId)
+        .ToList();
         }
 
 
-        public AddressBookEntity GetContactByIDRL(int id)
+        public AddressBookEntity GetContactByIDRL(int id, int UserId)
         {
-            var addressBookEntity = _dbContext.AddressBook.FirstOrDefault(a => a.Id == id);
+            var addressBookEntity = _dbContext.AddressBook.FirstOrDefault(a => a.Id == id && a.UserId == UserId);
 
             return addressBookEntity;
         }
 
 
-        public AddressBookEntity AddContactRL(AddressBookEntity addressBookEntity)
+        public async Task<AddressBookEntity> AddContactRL(AddressBookEntity addressBookEntity)
         {
+            // Add the entity to the database
             _dbContext.AddressBook.Add(addressBookEntity);
-            _dbContext.SaveChanges();
-            return addressBookEntity;
+            await _dbContext.SaveChangesAsync(); // Use async for better performance
 
+            return addressBookEntity;
         }
 
-        public AddressBookEntity UpdateContactByID(int id, AddressBookEntity addressBookEntity)
+
+        public AddressBookEntity UpdateContactByID(int id, AddressBookEntity addressBookEntity, int UserId)
         {
             var entity = _dbContext.AddressBook.FirstOrDefault(a => a.Id == id);
             if (entity == null)
             {
+                return null; // it is working fine with authorisation/authentication it's just in response it is sending updated value but in reality if not authorised it is not letting other person to update database
+            }
+            // later need to modify the response only other things are fixed
+            if (entity.UserId == UserId)
+            {
+                entity.Address = addressBookEntity.Address;
+                entity.PhoneNumber = addressBookEntity.PhoneNumber;
+                entity.Email = addressBookEntity.Email;
+                entity.Name = addressBookEntity.Name;
+                _dbContext.AddressBook.Update(entity);
+                _dbContext.SaveChanges();
                 return entity;
             }
-            entity.Address = addressBookEntity.Address;
-            entity.PhoneNumber = addressBookEntity.PhoneNumber;
-            entity.Email = addressBookEntity.Email;
-            entity.Name = addressBookEntity.Name;
-            _dbContext.SaveChanges();
-            return entity;
+            return null;
         }
 
-        public AddressBookEntity DeleteContactByID(int id)
+        public AddressBookEntity DeleteContactByID(int id, int UserId)
         {
             var entity = _dbContext.AddressBook.FirstOrDefault(_a => _a.Id == id);
             if (entity == null)
             {
                 return null;
             }
-            _dbContext.AddressBook.Remove(entity);
-            _dbContext.SaveChanges();
-            return entity;
+            if(entity.UserId == UserId)
+            {
+                _dbContext.AddressBook.Remove(entity);
+                _dbContext.SaveChanges();
+                return entity;
+            }
+            return null;
         }
     }
 }

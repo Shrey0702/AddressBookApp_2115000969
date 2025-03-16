@@ -25,16 +25,15 @@ namespace Middleware.TokenGeneration
 
             var claims = new[]
             {
-                new Claim("UserId", UserId.ToString()),
-                new Claim("Firstname", FirstName),
-                new Claim("Lastname", LastName),
-                //new Claim("UserName", UserName),
-                new Claim("Email", Email),
-                //new Claim("Phone", Phone)
-                //new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()) // Unique token ID
-            };
+        new Claim("UserId", UserId.ToString()),
+        new Claim("Firstname", FirstName),
+        new Claim("Lastname", LastName),
+        new Claim("Email", Email),
+        };
 
             var token = new JwtSecurityToken(
+                issuer: _config["Jwt:Issuer"],  // ✅ Add Issuer
+                audience: _config["Jwt:Audience"],  // ✅ Add Audience
                 claims: claims,
                 expires: DateTime.UtcNow.AddMinutes(Convert.ToDouble(_config["Jwt:ExpirationMinutes"])),
                 signingCredentials: credentials
@@ -42,6 +41,7 @@ namespace Middleware.TokenGeneration
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
+
 
         public string GenerateResetPasswordToken(string email)
         {
