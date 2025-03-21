@@ -9,5 +9,6 @@ namespace Middleware.SMTP
     public interface IEmailServices
     {
         Task SendResetPasswordEmailAsync(string email, string token);
+        Task SendEmailAsync(string to, string subject, string body);
     }
 }

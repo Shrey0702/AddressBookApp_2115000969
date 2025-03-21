@@ -1,61 +1,75 @@
 ﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using RabbitMQ.Client;
+using RabbitMQ.Client.Events;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Middleware.SMTP;
+using BusinessLayer.Interface;
 
 namespace BusinessLayer.Service
 {
-    public class RabbitMQService
+    public class RabbitMQService : IRabbitMQService
     {
-        private readonly string _hostname;
-        private readonly string _username;
-        private readonly string _password;
-        private readonly string _exchange;
-        private readonly string _queue;
-        private readonly string _routingKey;
-        // if we want we can also create a separate class for the message model
-        // and we can also create an interface for this class
-        public RabbitMQService(IConfiguration configuration)
+        private readonly string _hostname = "localhost";  // Change if needed
+        private readonly string _queueName = "AddressBook"; // Queue name
+        private readonly IEmailServices _smtp;
+        public RabbitMQService(IEmailServices _smtp)
         {
-            var rabbitConfig = configuration.GetSection("RabbitMQ");
-            _hostname = rabbitConfig["HostName"];
-            _username = rabbitConfig["UserName"];
-            _password = rabbitConfig["Password"];
-            _exchange = rabbitConfig["Exchange"];
-            _queue = rabbitConfig["Queue"];
-            _routingKey = rabbitConfig["RoutingKey"];
+
+            this._smtp = _smtp;
         }
 
-        public void PublishMessage(string message)
+        public void SendMessage(string message)
         {
-            var factory = new ConnectionFactory()
+            var factory = new ConnectionFactory() { HostName = _hostname };
+
+            using (var connection = factory.CreateConnection())
+            using (var channel = connection.CreateModel())
             {
-                HostName = _hostname,
-                UserName = _username,
-                Password = _password
+                channel.QueueDeclare(queue: _queueName, durable: false, exclusive: false, autoDelete: false, arguments: null);
+
+                var body = Encoding.UTF8.GetBytes(message);
+                channel.BasicPublish(exchange: "", routingKey: _queueName, basicProperties: null, body: body);
+
+            }
+        }
+
+        public void ReceiveMessage()
+        {
+            var factory = new ConnectionFactory() { HostName = _hostname };
+            var connection = factory.CreateConnection();
+            var channel = connection.CreateModel();
+
+            channel.QueueDeclare(queue: _queueName, durable: false, exclusive: false, autoDelete: false, arguments: null);
+
+            var consumer = new EventingBasicConsumer(channel);
+            consumer.Received += async (model, ea) =>
+            {
+                var body = ea.Body.ToArray();
+                var message = Encoding.UTF8.GetString(body);
+
+                // ✅ Extract email & message
+                var parts = message.Split(',', 2); // Splitting at first comma
+                if (parts.Length == 2)
+                {
+                    string email = parts[0].Trim();
+                    string emailMessage = parts[1].Trim();
+
+
+                    // ✅ Send email
+                    await _smtp.SendEmailAsync(email, "Welcome to AddressBook", emailMessage);
+                }
+                else
+                {
+                    return;
+                }
             };
 
-            using var connection = factory.CreateConnection();
-            using var channel = connection.CreateModel();
-
-            channel.ExchangeDeclare(_exchange, ExchangeType.Direct, durable: true, autoDelete: false);
-            channel.QueueDeclare(_queue, durable: true, exclusive: false, autoDelete: false);
-            channel.QueueBind(_queue, _exchange, _routingKey);
-
-            var body = Encoding.UTF8.GetBytes(message);
-
-            var properties = channel.CreateBasicProperties();
-            properties.Persistent = true;
-
-            channel.BasicPublish(exchange: _exchange,
-                                 routingKey: _routingKey,
-                                 basicProperties: properties,
-                                 body: body);
-
-            Console.WriteLine($"📢 [Published] {message}");
+            channel.BasicConsume(queue: _queueName, autoAck: true, consumer: consumer);
         }
 
     }

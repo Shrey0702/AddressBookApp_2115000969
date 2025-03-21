@@ -112,7 +112,7 @@ namespace AddressBookApp.Controllers
             try
             {
                 var message = JsonSerializer.Serialize(createdContact);
-                _rabbitMQService.PublishMessage(message);
+           
                 Console.WriteLine($" Published Message: {message}");
             }
             catch (Exception ex)

@@ -34,8 +34,7 @@ builder.Services.AddScoped<IUserAuthenticationRL, UserAuthenticationRL>();
 builder.Services.AddSingleton<Jwt>();
 builder.Services.AddScoped<PasswordHasher>();
 builder.Services.AddScoped<IEmailServices, EmailServices>();
-builder.Services.AddSingleton<RabbitMQService>();
-builder.Services.AddHostedService<RabbitMQConsumerService>();
+builder.Services.AddScoped<IRabbitMQService, RabbitMQService>();
 
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
