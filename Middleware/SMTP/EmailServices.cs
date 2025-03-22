@@ -70,9 +70,25 @@ namespace Middleware.SMTP
 
             try
             {
+                // Log received email
+                Console.WriteLine($"[DEBUG] Raw recipient email: '{to}'");
+
+                if (string.IsNullOrWhiteSpace(to))
+                    throw new ArgumentException("Recipient email cannot be empty.");
+
+                to = to.Trim();
+
+                if (!IsValidEmail(to))
+                {
+                    Console.WriteLine($"[ERROR] Invalid email detected: {to}");
+                    throw new ArgumentException($"Invalid email address: {to}");
+                }
+
+                Console.WriteLine($"[DEBUG] Sending email to: '{to}'");
+
                 var emailMessage = new MimeMessage();
                 emailMessage.From.Add(new MailboxAddress("AddressBook", fromEmail));
-                emailMessage.To.Add(new MailboxAddress("Recipient", to));
+                emailMessage.To.Add(MailboxAddress.Parse(to)); // Email validation
                 emailMessage.Subject = subject;
                 emailMessage.Body = new TextPart("html") { Text = body };
 
@@ -90,5 +106,17 @@ namespace Middleware.SMTP
                 throw;
             }
         }
+
+
+        private bool IsValidEmail(string email)
+        {
+            if (string.IsNullOrWhiteSpace(email))
+                return false;
+
+            string pattern = @"^[^@\s]+@[^@\s]+\.[^@\s]+$";
+            return System.Text.RegularExpressions.Regex.IsMatch(email, pattern);
+        }
+
+
     }
 }
