@@ -16,11 +16,9 @@ namespace AddressBookApp.Controllers
     public class AddressBookController : ControllerBase
     {
         private readonly IAddressBookBL _addressBookBL;
-        private readonly RabbitMQService _rabbitMQService;
-        public AddressBookController(IAddressBookBL addressBookBL, RabbitMQService rabbitMQService)
+        public AddressBookController(IAddressBookBL addressBookBL)
         {
             _addressBookBL = addressBookBL;
-            _rabbitMQService = rabbitMQService;
         }
         /// <summary>
         /// Fetch all contacts.
